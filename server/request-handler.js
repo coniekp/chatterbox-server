@@ -28,27 +28,30 @@ var headers= {
   'Content-Type' :'text/plain' // Seconds.
 };
 
-// var storage = [{userName: 'Fido', text: 'Give me all the snacks!'}];
 var storage = [];
 
 
 var response = function (res, data, status) {
   res.writeHead(status, headers);
-  res.end(data);
+  res.end(JSON.stringify(data));
 };
 
 
 var actions = {
   'GET': function(res) {
-    //call response() with resObj, data from server, statuscode
-    var data = JSON.stringify({results: storage});
-
-    response(res, data, 200);
+    response(res, {results: storage}, 200);
   },
   'POST': function(req, res) {
-    //call prepare() with reqObj, and cb(data) which saves data to database
-    //call redirect() with resObj, path, statuscode
+    var accumulatedData = [];
+    req.on('data', function(chunk) {
+      accumulatedData.push(chunk);
+    }).on('end', function() {
+      accumulatedData = Buffer.concat(accumulatedData).toString();
+      storage.push(JSON.parse(accumulatedData));
+    });
     
+    response(res, null, 201); 
+
   }
 };
 
