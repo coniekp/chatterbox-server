@@ -29,22 +29,45 @@ var defaultCorsHeaders = {
 
 
 var actions = {
-  'GET': function() {},
-  'POST': function() {}
+  'GET': function() {
+    //call response() with resObj, data from server, statuscode
+  },
+  'POST': function() {
+    //call prepare() with reqObj, and cb(data) which saves data to database
+    //call redirect() with resObj, path, statuscode
+  }
 };
   
   
   
 var requestHandler = function(request, response) {
 
-  console.log('Serving request type ' + request.method + ' for url ' + request.url);
-  
-  var statusCode = 200;
-  var headers = defaultCorsHeaders;
-  headers['Content-Type'] = 'text/plain';
-  response.writeHead(statusCode, headers);
-  response.end('Hello, World!');
+//determine if request method exists in actions
+//if no, send404()
+//if yes, call actions[request.method]
 };
+
+
+var response = function (res, data, status) {
+  //set status code(es5 default 200);
+  //call writehead(status, headers)
+  //call end(data);
+  
+};
+
+var send404 = function(res) {
+  //call response with resObj, 'Not Found' for data, and 404 statuscode
+};
+
+
+console.log('Serving request type ' + request.method + ' for url ' + request.url);
+  
+var statusCode = 200;
+var headers = defaultCorsHeaders;
+headers['Content-Type'] = 'text/plain';
+response.writeHead(statusCode, headers);
+response.end('Hello, World!');
+
 
 
 
