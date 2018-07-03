@@ -20,15 +20,16 @@ this file and include it in basic-server.js so that it actually works.
 //
 // Another way to get around this restriction is to serve you chat
 // client from this domain by setting up static file serving.
-var headers= {
+var headers = {
   'access-control-allow-origin': '*',
   'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
   'access-control-allow-headers': 'content-type, accept',
   'access-control-max-age': 10,
-  'Content-Type' :'text/plain' // Seconds.
+  'Content-Type': 'text/plain' // Seconds.
 };
 
-var storage = [];
+var storage = [{ username: 'kony', text: 'hi', roomname: 'lobby'}];
+var objectIdCounter = 0;
 
 
 var response = function (res, data, status) {
@@ -36,22 +37,31 @@ var response = function (res, data, status) {
   res.end(JSON.stringify(data));
 };
 
-
 var actions = {
   'GET': function(res) {
     response(res, {results: storage}, 200);
   },
+
   'POST': function(req, res) {
     var accumulatedData = [];
+
     req.on('data', function(chunk) {
       accumulatedData.push(chunk);
     }).on('end', function() {
-      accumulatedData = Buffer.concat(accumulatedData).toString();
-      storage.push(JSON.parse(accumulatedData));
+      
+      accumulatedData = JSON.parse(Buffer.concat(accumulatedData).toString());
+      
+      accumulatedData.objectId = objectIdCounter;
+      objectIdCounter++;
+      storage.push(accumulatedData);
+      
     });
     
     response(res, null, 201); 
 
+  },
+  'OPTIONS': function(req, res) {
+    response(res, null, 200);
   }
 };
 
@@ -65,20 +75,17 @@ var checkRequestMethod = function(req, res) {
       actions.GET(res);
     } else if (req.method === 'POST') {
       actions.POST(req, res);
-    } 
+    } else if (req.method === 'OPTIONS') {
+      actions.OPTIONS(req, res);
+    }
   } else {
     response(res, 'NOT FOUND', 404);
   }
 };
 
 var requestHandler = function(request, response) {
-  console.log('Serving request type ' + request.method + ' for url ' + request.url);
+  //console.log('Serving request type ' + request.method + ' for url ' + request.url);
   checkRequestMethod (request, response);
 };
-
-
-
-
-
 
 module.exports.requestHandler = requestHandler;
