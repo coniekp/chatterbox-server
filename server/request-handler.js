@@ -20,53 +20,59 @@ this file and include it in basic-server.js so that it actually works.
 //
 // Another way to get around this restriction is to serve you chat
 // client from this domain by setting up static file serving.
-var defaultCorsHeaders = {
+var headers= {
   'access-control-allow-origin': '*',
   'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
   'access-control-allow-headers': 'content-type, accept',
-  'access-control-max-age': 10 // Seconds.
+  'access-control-max-age': 10,
+  'Content-Type' :'text/plain' // Seconds.
+};
+
+// var storage = [{userName: 'Fido', text: 'Give me all the snacks!'}];
+var storage = [];
+
+
+var response = function (res, data, status) {
+  res.writeHead(status, headers);
+  res.end(data);
 };
 
 
 var actions = {
-  'GET': function() {
+  'GET': function(res) {
     //call response() with resObj, data from server, statuscode
+    var data = JSON.stringify({results: storage});
+
+    response(res, data, 200);
   },
-  'POST': function() {
+  'POST': function(req, res) {
     //call prepare() with reqObj, and cb(data) which saves data to database
     //call redirect() with resObj, path, statuscode
+    
   }
 };
-  
-  
-  
+
+
+var checkRequestMethod = function(req, res) {
+
+  var hasValidURL = req.url === '/classes/messages';
+
+  if (hasValidURL) {
+    if (req.method === 'GET') {
+      actions.GET(res);
+    } else if (req.method === 'POST') {
+      actions.POST(req, res);
+    } 
+  } else {
+    response(res, 'NOT FOUND', 404);
+  }
+};
+
 var requestHandler = function(request, response) {
-
-//determine if request method exists in actions
-//if no, send404()
-//if yes, call actions[request.method]
+  console.log('Serving request type ' + request.method + ' for url ' + request.url);
+  checkRequestMethod (request, response);
 };
 
-
-var response = function (res, data, status) {
-  //set status code(es5 default 200);
-  //call writehead(status, headers)
-  //call end(data);
-  
-};
-
-var send404 = function(res) {
-  //call response with resObj, 'Not Found' for data, and 404 statuscode
-};
-
-
-console.log('Serving request type ' + request.method + ' for url ' + request.url);
-  
-var statusCode = 200;
-var headers = defaultCorsHeaders;
-headers['Content-Type'] = 'text/plain';
-response.writeHead(statusCode, headers);
-response.end('Hello, World!');
 
 
 
