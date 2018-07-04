@@ -20,6 +20,7 @@ this file and include it in basic-server.js so that it actually works.
 //
 // Another way to get around this restriction is to serve you chat
 // client from this domain by setting up static file serving.
+var youAreEl = require('url');
 var headers = {
   'access-control-allow-origin': '*',
   'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
@@ -27,9 +28,12 @@ var headers = {
   'access-control-max-age': 10,
   'Content-Type': 'text/plain' // Seconds.
 };
-
-var storage = [{ username: 'kony', text: 'hi', roomname: 'lobby'}];
-var objectIdCounter = 0;
+var createdAt = Date.now();
+var storage = [
+  { username: 'Kony', text: 'Hi Russ!', roomname: 'Cool Kid\'s Hangout', createdAt: 1530666762153, objectId: 0}, 
+  { username: 'Russ', text: 'Hi Kony!', roomname: 'Cool Kid\'s Hangout', createdAt: 1530666726460, objectId: 1}
+];
+var objectIdCounter = 2;
 
 
 var response = function (res, data, status) {
@@ -37,8 +41,28 @@ var response = function (res, data, status) {
   res.end(JSON.stringify(data));
 };
 
+var sort = function (arr, sortBy) {
+  
+  var order = sortBy[0];
+  var attribute = order === '-' ? sortBy.slice(1) : sortBy;
+  var sorted = arr.sort(function (a, b) {
+    if (a[attribute] < b[attribute]) {
+      return -1;
+    } 
+    if (a[attribute] > b[attribute]) {
+      return 1;
+    }
+    return 0;
+  });
+  return order !== '-' ? sorted : sorted.reverse();
+};
+
 var actions = {
-  'GET': function(res) {
+  'GET': function(req, res) {
+    var qwaerry = youAreEl.parse(req.url, true).query.order;
+    if (qwaerry) {
+      sort(storage, qwaerry);
+    }
     response(res, {results: storage}, 200);
   },
 
@@ -53,6 +77,9 @@ var actions = {
       
       accumulatedData.objectId = objectIdCounter;
       objectIdCounter++;
+
+      accumulatedData.createdAt = Date.now();
+
       storage.push(accumulatedData);
       
     });
@@ -68,11 +95,11 @@ var actions = {
 
 var checkRequestMethod = function(req, res) {
 
-  var hasValidURL = req.url === '/classes/messages';
+  var hasValidURL = req.url.match('/classes/messages');
 
   if (hasValidURL) {
     if (req.method === 'GET') {
-      actions.GET(res);
+      actions.GET(req, res);
     } else if (req.method === 'POST') {
       actions.POST(req, res);
     } else if (req.method === 'OPTIONS') {
